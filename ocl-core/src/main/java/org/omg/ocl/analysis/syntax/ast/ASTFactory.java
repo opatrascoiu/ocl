@@ -57,12 +57,14 @@ public class ASTFactory {
         if (name.getPosition() == null) {
             throw new RuntimeException("Name position cannot be null");
         }
-        if (type != null) {
-            return calculatePosition(name, type);
-        } else if (init != null) {
+        if (init != null) {
             return calculatePosition(name, init);
         } else {
-            throw new RuntimeException("Cannot copute position for name, type and init");
+            if (type != null) {
+                return calculatePosition(name, type);
+            } else {
+                return calculatePosition(name, name);
+            }
         }
     }
 
@@ -200,7 +202,7 @@ public class ASTFactory {
     }
 
     public VariableDeclaration toVariableDeclaration(Position position, String name, PositionableType type, Positionable init) {
-        return new VariableDeclaration(position, name, type.getType(), (OCLExpression) init);
+        return new VariableDeclaration(position, name, type == null ? null : type.getType(), (OCLExpression) init);
     }
 
     public IntegerLiteralExp toIntegerLiteralExp(Position position, String text) {
@@ -217,6 +219,18 @@ public class ASTFactory {
 
     public BooleanLiteralExp toBooleanLiteralExp(Position position, String text) {
         return new BooleanLiteralExp(position, Boolean.parseBoolean(text));
+    }
+
+    public UnlimitedNaturalLiteralExp toUnlimitedNaturalLiteralExp(Position position, String text) {
+        return new UnlimitedNaturalLiteralExp(position, text);
+    }
+
+    public NullLiteralExp toNullLiteralExp(Position position, String text) {
+        return new NullLiteralExp(position, text);
+    }
+
+    public InvalidLiteralExp toInvalidLiteralExp(Position position, String text) {
+        return new InvalidLiteralExp(position, text);
     }
 
     public Type toIntegerType() {

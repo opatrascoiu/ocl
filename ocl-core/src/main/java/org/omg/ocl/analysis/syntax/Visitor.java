@@ -94,6 +94,9 @@ public interface Visitor {
     Object visit(CollectionItem element, Map<String, Object> params);
     Object visit(CollectionRange element, Map<String, Object> params);
     Object visit(TupleLiteralExp element, Map<String, Object> params);
+    Object visit(NullLiteralExp element, Map<String, Object> params);
+    Object visit(InvalidLiteralExp element, Map<String, Object> params);
+    Object visit(UnlimitedNaturalLiteralExp element, Map<String, Object> params);
 
     Object visit(PositionableType element, Map<String, Object> params);
 

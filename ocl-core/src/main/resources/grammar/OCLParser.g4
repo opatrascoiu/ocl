@@ -72,102 +72,132 @@ import java.io.*;
 //
 // Expressions
 //
-expressionRoot :
-    expression
+expressionRoot returns [OCLExpression ast]:
+    expression {$ast = $expression.ast;}
     EOF
 ;
 
-expression :
-    impliesExp
+expression returns [OCLExpression ast] :
+    impliesExp {$ast = $impliesExp.ast;}
 ;
 
-impliesExp :
-    xorDisjunctiveLogicalExp
+impliesExp returns [OCLExpression ast] :
+    first=xorDisjunctiveLogicalExp
+    {$ast = $first.ast;}
     (
-        IMPLIES xorDisjunctiveLogicalExp
+        IMPLIES second=xorDisjunctiveLogicalExp
+        {$ast = astFactory.toImpliesExp(astFactory.toPosition($ast, $second.ast), $first.ast, $second.ast);}
     )?
 ;
 
-xorDisjunctiveLogicalExp :
-    orDisjunctiveLogicalExp
+xorDisjunctiveLogicalExp returns [OCLExpression ast] :
+    first=orDisjunctiveLogicalExp
+    {$ast = $first.ast;}
     (
-        XOR orDisjunctiveLogicalExp
+        op=XOR second=orDisjunctiveLogicalExp
+        {$ast = astFactory.toLogicalExp(astFactory.toPosition($ast, $second.ast), convertToken($op), $ast, $second.ast);}
     )*
 ;
 
-orDisjunctiveLogicalExp :
-    conjunctiveLogicalExp
+orDisjunctiveLogicalExp returns [OCLExpression ast] :
+    first=conjunctiveLogicalExp
+    {$ast = $first.ast;}
     (
-        OR conjunctiveLogicalExp
+        op=OR second=conjunctiveLogicalExp
+        {$ast = astFactory.toLogicalExp(astFactory.toPosition($ast, $second.ast), convertToken($op), $ast, $second.ast);}
     )*
 ;
 
-conjunctiveLogicalExp :
-    equalityExp
+conjunctiveLogicalExp returns [OCLExpression ast] :
+    first=equalityExp
+    {$ast = $first.ast;}
     (
-        AND equalityExp
+        op=AND second=equalityExp
+        {$ast = astFactory.toLogicalExp(astFactory.toPosition($ast, $second.ast), convertToken($op), $ast, $second.ast);}
     )*
 ;
 
-equalityExp :
-    relationalExp
+equalityExp returns [OCLExpression ast] :
+    first=relationalExp
+    {$ast = $first.ast;}
     (
-        (EQUAL | NOT_EQUAL ) relationalExp
+        (op=EQUAL | op=NOT_EQUAL ) second=relationalExp
+        {$ast = astFactory.toEqualityExp(astFactory.toPosition($ast, $second.ast), convertToken($op), $ast, $second.ast);}
     )?
 ;
 
-relationalExp :
-    additiveExp
+relationalExp returns [OCLExpression ast] :
+    first=additiveExp
+    {$ast = $first.ast;}
     (
-        (GE | LT | LE | GE ) additiveExp
+        (op=GE | op=LT | op=LE | op=GE ) second=additiveExp
+        {$ast = astFactory.toRelationalExp(astFactory.toPosition($ast, $second.ast), convertToken($op), $ast, $second.ast);}
     )?
 ;
 
-additiveExp :
-    multiplicativeExp
+additiveExp returns [OCLExpression ast] :
+    first=multiplicativeExp
+    {$ast = $first.ast;}
     (
-        (PLUS| MINUS) multiplicativeExp
+        (op=PLUS| op=MINUS) second=multiplicativeExp
+        {$ast = astFactory.toAdditiveExp(astFactory.toPosition($ast, $second.ast), convertToken($op), $ast, $second.ast);}
     )*
 ;
 
-multiplicativeExp :
-    unaryExp
+multiplicativeExp returns [OCLExpression ast] :
+    first=unaryExp
+    {$ast = $first.ast;}
     (
-        (STAR | FORWARD_SLASH) unaryExp
+        (op=STAR | op=FORWARD_SLASH) second=unaryExp
+        {$ast = astFactory.toMultiplicativeExp(astFactory.toPosition($ast, $second.ast), convertToken($op), $ast, $second.ast);}
     )*
 ;
 
-unaryExp :
-    (NOT | MINUS)? postfixExp
+unaryExp returns [OCLExpression ast] :
+    (op=NOT | op=MINUS)? postfixExp
+    {$ast = $op==null ? $postfixExp.ast : astFactory.toUnaryExp(astFactory.toPosition(convertToken($op), $postfixExp.ast), convertToken($op), $postfixExp.ast);}
 ;
 
-postfixExp :
+postfixExp returns [OCLExpression ast] :
     atPreExp
-    (
-        dotSelectionExp
-        |
-        arrowSelectionExp
-        |
-        callExp
-        |
-        messageExp
-    )*
-;
-
-dotSelectionExp :
-    DOT SIMPLE_NAME
+    {$ast = $atPreExp.ast;}
     (
         (
-            LEFT_SQUARE_BRACKET argList RIGHT_SQUARE_BRACKET
+            dotSelectionExp[$ast]
+            {$ast = $dotSelectionExp.ast;}
         )
         |
         (
-            LEFT_ROUND_BRACKET (argList)? RIGHT_ROUND_BRACKET
+            arrowSelectionExp[$ast]
+            {$ast = $arrowSelectionExp.ast;}
+        )
+        |
+        (
+            callExp[$ast]
+            {$ast = $callExp.ast;}
+        )
+        |
+        (
+            messageExp[$ast]
+            {$ast = $messageExp.ast;}
+        )
+    )*
+;
+
+dotSelectionExp[OCLExpression source] returns [OCLExpression ast] :
+    DOT name=SIMPLE_NAME
+    (
+        (
+            LEFT_SQUARE_BRACKET args1=argList last=RIGHT_SQUARE_BRACKET
+        )
+        |
+        (
+            LEFT_ROUND_BRACKET (args2=argList)? last=RIGHT_ROUND_BRACKET
         )
     )?
 ;
 
-arrowSelectionExp :
+arrowSelectionExp[OCLExpression source] returns [OCLExpression ast] :
     (
         ARROW SIMPLE_NAME
         LEFT_ROUND_BRACKET
@@ -190,13 +220,13 @@ arrowSelectionExp :
     )
 ;
 
-callExp  :
+callExp[OCLExpression source] returns [OCLExpression ast] :
     LEFT_ROUND_BRACKET
     argList?
     RIGHT_ROUND_BRACKET
 ;
 
-argList :
+argList returns [List<OCLExpression> ast] :
     expression
     (
         COMMA expression
@@ -206,150 +236,254 @@ argList :
 //
 // Message expression
 //
-messageExp :
+messageExp[OCLExpression source] returns [OCLExpression ast] :
     UP_UP SIMPLE_NAME LEFT_ROUND_BRACKET messageArguments? RIGHT_ROUND_BRACKET
     |
     UP SIMPLE_NAME LEFT_ROUND_BRACKET messageArguments? RIGHT_ROUND_BRACKET
 ;
 
-messageArguments :
+messageArguments returns [List<OCLExpression> ast] :
     messageArgument (COMMA messageArgument)*
 ;
 
-messageArgument :
+messageArgument returns [OCLExpression ast] :
     QUESTION_MARK (COLON type)?
     |
     expression
 ;
 
-atPreExp :
+atPreExp returns [OCLExpression ast] :
     (AT PRE)? letExp
+    {$ast = $letExp.ast;}
 ;
 
-letExp :
+letExp returns [OCLExpression ast] :
     LET variableDeclaration (COMMA variableDeclaration)* IN expression
     |
-    primaryExp
+    (
+        primaryExp
+        {$ast = $primaryExp.ast;}
+    )
 ;
 
-primaryExp :
+primaryExp returns [OCLExpression ast] :
     pathName
     |
-    literalExp
+    (
+        literalExp
+        {$ast = $literalExp.ast;}
+    )
     |
-    LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET
+    (
+        LEFT_ROUND_BRACKET expression RIGHT_ROUND_BRACKET
+        {$ast = $expression.ast;}
+    )
     |
     ifExp
 ;
 
-ifExp :
+ifExp returns [OCLExpression ast] :
     IF expression THEN expression ELSE expression ENDIF
 ;
 
 //
 // Literal Exp
 //
-literalExp :
-    enumLiteralExp
+literalExp returns [OCLExpression ast] :
+    (
+        enumLiteralExp
+        {$ast = $enumLiteralExp.ast;}
+    )
     |
-    collectionLiteralExp
+    (
+        collectionLiteralExp
+        {$ast = $collectionLiteralExp.ast;}
+    )
     |
-    tupleLiteralExp
+    (
+        tupleLiteralExp
+        {$ast = $tupleLiteralExp.ast;}
+    )
     |
-    primitiveLiteralExp
+    (
+        primitiveLiteralExp
+        {$ast = $primitiveLiteralExp.ast;}
+    )
     |
-    typeLiteralExp
+    (
+        typeLiteralExp
+        {$ast = $typeLiteralExp.ast;}
+    )
 ;
 
-enumLiteralExp :
+enumLiteralExp returns [OCLExpression ast] :
     pathName COLON_COLON SIMPLE_NAME
 ;
 
-typeLiteralExp :
+typeLiteralExp returns [OCLExpression ast] :
     type
 ;
 
 //
 // Primitive Literal Exp
 //
-primitiveLiteralExp :
-    integerLiteralExp
+primitiveLiteralExp returns [OCLExpression ast] :
+    (
+        integerLiteralExp
+        {$ast = $integerLiteralExp.ast;}
+    )
     |
-    realLiteralExp
+    (
+        realLiteralExp
+        {$ast = $realLiteralExp.ast;}
+    )
     |
-    stringLiteralExp
+    (
+        stringLiteralExp
+        {$ast = $stringLiteralExp.ast;}
+    )
     |
-    booleanLiteralExp
+    (
+        booleanLiteralExp
+        {$ast = $booleanLiteralExp.ast;}
+    )
     |
-    unlimitedNaturalLiteralExp
+    (
+        unlimitedNaturalLiteralExp
+        {$ast = $unlimitedNaturalLiteralExp.ast;}
+    )
     |
-    nullLiteralExp
+    (
+        nullLiteralExp
+        {$ast = $nullLiteralExp.ast;}
+    )
     |
-    invalidLiteralExp
+    (
+        invalidLiteralExp
+        {$ast = $invalidLiteralExp.ast;}
+    )
 ;
 
-integerLiteralExp :
-    INTEGER_LITERAL
+integerLiteralExp returns [IntegerLiteralExp ast]:
+    literal = INTEGER_LITERAL
+    {$ast = astFactory.toIntegerLiteralExp(astFactory.toPosition(convertToken($literal)), $literal.getText());}
 ;
 
-realLiteralExp :
-    REAL_LITERAL
+realLiteralExp returns [RealLiteralExp ast]:
+    literal = REAL_LITERAL
+    {$ast = astFactory.toRealLiteralExp(astFactory.toPosition(convertToken($literal)), $literal.getText());}
 ;
 
-stringLiteralExp :
-    STRING_LITERAL
+stringLiteralExp returns [StringLiteralExp ast]:
+    literal = STRING_LITERAL
+    {$ast = astFactory.toStringLiteralExp(astFactory.toPosition(convertToken($literal)), $literal.getText());}
 ;
 
-booleanLiteralExp :
-    BOOLEAN_LITERAL
+booleanLiteralExp returns [OCLExpression ast] :
+    literal = BOOLEAN_LITERAL
+    {$ast = astFactory.toBooleanLiteralExp(astFactory.toPosition(convertToken($literal)), $literal.getText());}
 ;
 
-unlimitedNaturalLiteralExp :
-    MINUS INTEGER_LITERAL
-    |
-    STAR
+unlimitedNaturalLiteralExp returns [OCLExpression ast] :
+    (
+        literal=STAR
+        {$ast = astFactory.toUnlimitedNaturalLiteralExp(astFactory.toPosition(convertToken($literal)), $literal.text);}
+    )
 ;
 
-nullLiteralExp :
-    NULL
+nullLiteralExp returns [OCLExpression ast] :
+    literal=NULL
+    {$ast = astFactory.toNullLiteralExp(astFactory.toPosition(convertToken($literal)), $literal.getText());}
 ;
 
-invalidLiteralExp :
-    INVALID
+invalidLiteralExp returns [OCLExpression ast] :
+    literal=INVALID
+    {$ast = astFactory.toInvalidLiteralExp(astFactory.toPosition(convertToken($literal)), $literal.getText());}
 ;
 
 //
 // Collection Literal Exp
 //
-collectionLiteralExp :
-    collectionTypeIdentifier LEFT_CURLY_BRACKET collectionLiteralPartList? RIGHT_CURLY_BRACKET
+collectionLiteralExp returns [OCLExpression ast] :
+    {List<CollectionLiteralPart> parts = new ArrayList<CollectionLiteralPart>();}
+    kind=collectionTypeIdentifier
+    LEFT_CURLY_BRACKET
+    (list=collectionLiteralPartList {parts.addAll($list.ast);})?
+    last=RIGHT_CURLY_BRACKET
+    {$ast = astFactory.toCollectionLiteralExp(astFactory.toPosition(convertToken($kind.ast), convertToken($last)), convertToken($kind.ast), parts);}
 ;
 
-collectionLiteralPartList :
-    collectionLiteralPart ( COMMA collectionLiteralPartList )?
+collectionLiteralPartList returns [List<CollectionLiteralPart> ast] :
+    {$ast = new ArrayList<CollectionLiteralPart>();}
+    part=collectionLiteralPart
+    {$ast.add($part.ast);}
+    (
+        COMMA part=collectionLiteralPart
+        {$ast.add($part.ast);}
+    )*
 ;
 
-collectionTypeIdentifier :
-    COLLECTION | SET | ORDERED_SET | BAG | SEQUENCE
+collectionTypeIdentifier returns [Token ast] :
+    (
+        left=COLLECTION
+        {$ast = $left;}
+    )
+    |
+    (
+        left=SET
+        {$ast = $left;}
+    )
+    |
+    (
+        left=ORDERED_SET
+        {$ast = $left;}
+    )
+    |
+    (
+        left=BAG
+        {$ast = $left;}
+    )
+    |
+    (
+        left=SEQUENCE
+        {$ast = $left;}
+    )
 ;
 
-collectionLiteralPart :
-    expression ( RANGE expression )?
+collectionLiteralPart returns [CollectionLiteralPart ast]:
+    first=expression
+    {$ast = astFactory.toCollectionLiteralPart(astFactory.toPosition($first.ast), $first.ast, null);}
+    (
+        RANGE last=expression
+        {$ast = astFactory.toCollectionLiteralPart(astFactory.toPosition($first.ast, $last.ast), $first.ast, $last.ast);}
+    )?
 ;
 
 //
 // Tuple Literal Exp
 //
-tupleLiteralExp :
-    TUPLE LEFT_CURLY_BRACKET (variableDeclarationList)? RIGHT_CURLY_BRACKET
+tupleLiteralExp returns [TupleLiteralExp ast]:
+    {List<VariableDeclaration> decls = new ArrayList<VariableDeclaration>();}
+    first=TUPLE LEFT_CURLY_BRACKET (variableDeclarationList {decls.addAll($variableDeclarationList.ast);})?
+    last=RIGHT_CURLY_BRACKET
+    {$ast = astFactory.toTupleLiteralExp(astFactory.toPosition(convertToken($first), convertToken($last)), decls);}
 ;
 
-variableDeclarationList :
-    variableDeclaration ( COMMA variableDeclaration )*
+variableDeclarationList returns [List<VariableDeclaration> ast]:
+    {$ast = new ArrayList<VariableDeclaration>();}
+    decl1=variableDeclaration
+    {$ast.add($decl1.ast);}
+    (
+        COMMA decl2=variableDeclaration
+        {$ast.add($decl2.ast);}
+    )*
 ;
 
-variableDeclaration :
-    SIMPLE_NAME (COLON type)? (EQUAL expression)?
+variableDeclaration returns [VariableDeclaration ast]:
+    {PositionableType posType = null;}
+    {Positionable init = null;}
+    name=SIMPLE_NAME (COLON type {posType = $type.ast;} )? (EQUAL expression {init = $expression.ast;} )?
+    {$ast = astFactory.toVariableDeclaration(astFactory.toPosition(convertToken($name), posType, init), $name.getText(), posType, init);}
 ;
 
 //
@@ -376,36 +510,69 @@ restrictedKeyword :
 //
 // Types
 //
-type :
-    pathName
+type returns [PositionableType ast] :
+    (
+        pathName
+    )
     |
-    collectionType
+    (
+        collectionType
+        {$ast = $collectionType.ast;}
+    )
     |
-    tupleType
+    (
+        tupleType
+        {$ast = $tupleType.ast;}
+    )
     |
-    primitiveType
+    (
+        primitiveType
+        {$ast = $primitiveType.ast;}
+    )
     |
-    oclType
+    (
+        oclType
+    )
 ;
 
-collectionType :
-    collectionTypeIdentifier LEFT_ROUND_BRACKET type RIGHT_ROUND_BRACKET
+collectionType returns [PositionableType ast] :
+    kind=collectionTypeIdentifier LEFT_ROUND_BRACKET elementType=type last=RIGHT_ROUND_BRACKET
+    {$ast = astFactory.toPositionableType(astFactory.toPosition(convertToken($kind.ast), convertToken($last)), astFactory.toCollectionType(convertToken($kind.ast), $elementType.ast));}
 ;
 
-tupleType :
-    TUPLE LEFT_ROUND_BRACKET variableDeclarationList RIGHT_ROUND_BRACKET
+tupleType returns [PositionableType ast]:
+    first=TUPLE LEFT_ROUND_BRACKET decls=variableDeclarationList last=RIGHT_ROUND_BRACKET
+    {$ast = astFactory.toPositionableType(astFactory.toPosition(convertToken($first), convertToken($last)), astFactory.toTupleType($decls.ast));}
 ;
 
 primitiveType returns [PositionableType ast]:
-    INTEGER_TYPE
-    |
-    REAL_TYPE
-    |
-    BOOLEAN_TYPE
-    |
-    STRING_TYPE
-    |
-    UNLIMITED_NATURAL
+    {Type type = null;}
+    (
+        (
+            first=INTEGER_TYPE
+            {type = astFactory.toIntegerType();}
+        )
+        |
+        (
+            first=REAL_TYPE
+            {type = astFactory.toRealType();}
+        )
+        |
+        (
+            first=BOOLEAN_TYPE
+            {type = astFactory.toBooleanType();}
+        )
+        |
+        (
+            first=STRING_TYPE
+            {type = astFactory.toStringType();}
+        )
+        |
+        (
+            first=UNLIMITED_NATURAL
+        )
+    )
+    {$ast = astFactory.toPositionableType(astFactory.toPosition(convertToken($first)), type);}
 ;
 
 oclType :
