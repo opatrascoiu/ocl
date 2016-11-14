@@ -13,16 +13,17 @@
 */
 package org.omg.ocl.analysis.syntax.lexer;
 
-import static org.junit.Assert.*;
-
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
 import org.junit.Test;
-
 import org.omg.ocl.analysis.syntax.antlr.OCLLexer;
 import org.omg.ocl.analysis.syntax.ast.ASTFactory;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 import static org.omg.ocl.analysis.syntax.antlr.OCLLexer.*;
 
 /**
@@ -99,6 +100,17 @@ public class OCLLexerTest {
         checkToken("Real", REAL_TYPE, "Real");
         checkToken("String", STRING_TYPE, "String");
         checkToken("Boolean", BOOLEAN_TYPE, "Boolean");
+        checkToken("iterate", ITERATE, "iterate");
+        checkToken("pre", PRE, "pre");
+        checkToken("let", LET, "let");
+        checkToken("in", IN, "in");
+        checkToken("null", NULL, "null");
+        checkToken("invalid", INVALID, "invalid");
+        checkToken("UnlimitedNatural", UNLIMITED_NATURAL, "UnlimitedNatural");
+        checkToken("OclAny", OCL_ANY, "OclAny");
+        checkToken("OclInvalid", OCL_INVALID, "OclInvalid");
+        checkToken("OclMessage", OCL_MESSAGE, "OclMessage");
+        checkToken("OclVoid", OCL_VOID, "OclVoid");
     }
 
     @Test
@@ -115,6 +127,10 @@ public class OCLLexerTest {
         checkToken("=", EQUAL, "=");
         checkToken("<>", NOT_EQUAL, "<>");
         checkToken("|", BAR, "|");
+        checkToken("@", AT, "@");
+        checkToken("?", QUESTION_MARK, "?");
+        checkToken("^^", UP_UP, "^^");
+        checkToken("^", UP, "^");
     }
 
     @Test
@@ -128,9 +144,34 @@ public class OCLLexerTest {
         checkToken(":", COLON, ":");
         checkToken(",", COMMA, ",");
         checkToken(";", SEMICOLON, ";");
-        checkToken("::", ENUM_SEPARATOR, "::");
+        checkToken("::", COLON_COLON, "::");
         checkToken(".", DOT, ".");
         checkToken("..", RANGE, "..");
+    }
+
+    @Test
+    public void testWhiteSpaces() {
+        checkTokens(" \t\n\r\f123", Arrays.asList(INTEGER_LITERAL), Arrays.asList("123"));
+    }
+
+    @Test
+    public void testComments() {
+        checkTokens("// 123\n1234", Arrays.asList(INTEGER_LITERAL), Arrays.asList("1234"));
+        checkTokens("/* 123 */1234", Arrays.asList(INTEGER_LITERAL), Arrays.asList("1234"));
+    }
+
+    @Test
+    public void testSequences() {
+        checkTokens("Set{1}", Arrays.asList(SET, LEFT_CURLY_BRACKET, INTEGER_LITERAL, RIGHT_CURLY_BRACKET), Arrays.asList("Set", "{", "1", "}"));
+    }
+
+    private void checkTokens(String inputTape, List<Integer> expectedCodes, List<String> expectedLexemes) {
+        OCLLexer lexer = makeLexer(inputTape);
+        for(int i=0; i<expectedCodes.size(); i++) {
+            Token token = lexer.nextToken();
+            assertEquals(expectedLexemes.get(i), token.getText());
+            assertEquals((long)expectedCodes.get(i), token.getType());
+        }
     }
 
     private Token checkToken(String inputTape, int expectedCode, String expectedLexeme) {

@@ -17,6 +17,14 @@ lexer grammar OCLLexer;
 package org.omg.ocl.analysis.syntax.antlr;
 }
 
+// White spaces
+WS :
+    (' ' | '\t' | '\n' | '\r' | '\f')+  -> skip ;
+
+// Comments
+COMMENT :                       '/*' .*? '*/' -> skip ;
+LINE_COMMENT :                  '//' ~[\r\n]* -> skip ;
+
 // Keywords
 PACKAGE :                       'package' ;
 CONTEXT :                       'context' ;
@@ -45,6 +53,17 @@ INTEGER_TYPE :                  'Integer' ;
 REAL_TYPE :                     'Real' ;
 STRING_TYPE :                   'String' ;
 BOOLEAN_TYPE :                  'Boolean' ;
+ITERATE :                       'iterate' ;
+PRE :                           'pre' ;
+LET :                           'let' ;
+IN :                            'in' ;
+NULL :                          'null' ;
+INVALID :                       'invalid' ;
+UNLIMITED_NATURAL :             'UnlimitedNatural' ;
+OCL_ANY :                       'OclAny' ;
+OCL_INVALID :                   'OclInvalid' ;
+OCL_MESSAGE :                   'OclMessage' ;
+OCL_VOID :                      'OclVoid' ;
 
 // Literals
 BOOLEAN_LITERAL :               'true' | 'false' ;
@@ -61,7 +80,7 @@ REAL_LITERAL :
 ;
 
 // Identifier
-SIMPLE_NAME :                   NAME_START_CHAR (NAME_START_CHAR | DECIMAL_DIGIT)* ;
+SIMPLE_NAME :                   JAVA_LETTER JAVA_LETTER_OR_DIGIT* ;
 
 //
 // Operators
@@ -78,6 +97,10 @@ GT :                            '>' ;
 EQUAL :                         '=' ;
 NOT_EQUAL :                     '<>' ;
 BAR :                           '|' ;
+AT :                            '@' ;
+QUESTION_MARK :                 '?' ;
+UP_UP :                         '^^' ;
+UP :                            '^' ;
 
 //
 // Delimiters
@@ -91,19 +114,32 @@ RIGHT_CURLY_BRACKET :           '}';
 COLON :                         ':' ;
 COMMA :                         ',' ;
 SEMICOLON :                     ';' ;
-ENUM_SEPARATOR :                '::' ;
+COLON_COLON :                   '::' ;
 DOT :                           '.';
 RANGE :                         '..';
 
 //
 // Fragments
 //
-fragment NAME_START_CHAR :      [A-Z] | '_' | '$' | [a-z]
-                                 | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF]
-                                 | [\u0370-\u037D] | [\u037F-\u1FFF]
-                                 | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF]
-                                 | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD]
-                                 ;
+fragment JAVA_LETTER :
+    [a-zA-Z$_] // these are the "java letters" below 0x7F
+	|	// covers all characters above 0x7F which are not a surrogate
+		~[\u0000-\u007F\uD800-\uDBFF]
+		{Character.isJavaIdentifierStart(_input.LA(-1))}?
+	|	// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+		[\uD800-\uDBFF] [\uDC00-\uDFFF]
+		{Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+	;
+
+fragment JAVA_LETTER_OR_DIGIT :
+    [a-zA-Z0-9$_] // these are the "java letters or digits" below 0x7F
+	|	// covers all characters above 0x7F which are not a surrogate
+		~[\u0000-\u007F\uD800-\uDBFF]
+		{Character.isJavaIdentifierPart(_input.LA(-1))}?
+	|	// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+		[\uD800-\uDBFF] [\uDC00-\uDFFF]
+		{Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+	;
 
 fragment DECIMAL_DIGIT :        [0-9] ;
 fragment EXPONENT :             ('e'|'E') ('+' | '-')? [0-9]+ ;
@@ -113,3 +149,4 @@ fragment STRING_CHARACTER :     ~['\\] | ESCAPE_SEQUENCE ;
 fragment ESCAPE_SEQUENCE :      '\\' [btnfr"'\\] |  UNICODE_ESCAPE ;
 fragment UNICODE_ESCAPE :       '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
 fragment HEX_DIGIT :            [0-9a-fA-F] ;
+
