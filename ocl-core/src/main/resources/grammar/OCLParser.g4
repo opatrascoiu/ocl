@@ -206,7 +206,7 @@ arrowSelectionExp[OCLExpression source] returns [OCLExpression ast] :
     )
     |
     (
-        ARROW ITERATE
+        ARROW SIMPLE_NAME
         LEFT_ROUND_BRACKET
         (variableDeclaration SEMICOLON)? variableDeclaration BAR expression
         RIGHT_ROUND_BRACKET
@@ -549,22 +549,22 @@ primitiveType returns [PositionableType ast]:
     {Type type = null;}
     (
         (
-            first=INTEGER_TYPE
+            first=INTEGER
             {type = astFactory.toIntegerType();}
         )
         |
         (
-            first=REAL_TYPE
+            first=REAL
             {type = astFactory.toRealType();}
         )
         |
         (
-            first=BOOLEAN_TYPE
+            first=BOOLEAN
             {type = astFactory.toBooleanType();}
         )
         |
         (
-            first=STRING_TYPE
+            first=STRING
             {type = astFactory.toStringType();}
         )
         |
