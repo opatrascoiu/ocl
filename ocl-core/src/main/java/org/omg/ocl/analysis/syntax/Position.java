@@ -17,6 +17,7 @@ package org.omg.ocl.analysis.syntax;
  * Created by Octavian Patrascoiu on 15-Oct-16.
  */
 public class Position {
+    private final String sourceName;
     private final int beginLine;
     private final int beginColumn;
     private final int endLine;
@@ -24,13 +25,18 @@ public class Position {
     private final int beginOffset;
     private final int endOffset;
 
-    public Position(int beginLine, int beginColumn, int beginOffset, int endLine, int endColumn, int endOffset) {
+    public Position(String sourceName, int beginLine, int beginColumn, int beginOffset, int endLine, int endColumn, int endOffset) {
+        this.sourceName = sourceName;
         this.beginLine = beginLine;
         this.beginColumn = beginColumn;
         this.endLine = endLine;
         this.endColumn = endColumn;
         this.beginOffset = beginOffset;
         this.endOffset = endOffset;
+    }
+
+    public String getSourceName() {
+        return sourceName;
     }
 
     public int getBeginLine() {

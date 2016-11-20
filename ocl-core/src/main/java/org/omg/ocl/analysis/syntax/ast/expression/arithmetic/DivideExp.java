@@ -28,11 +28,6 @@ public class DivideExp extends ArithmeticExp {
     }
 
     @Override
-    public String getOperator() {
-        return "/";
-    }
-
-    @Override
     public Object accept(Visitor visitor, Map<String, Object> params) {
         return visitor.visit(this, params);
     }

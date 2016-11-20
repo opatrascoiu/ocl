@@ -13,7 +13,7 @@
 */
 package org.omg.ocl.analysis.syntax.ast.expression.literal;
 
-import org.omg.ocl.analysis.syntax.lexer.Token;
+import org.antlr.v4.runtime.Token;
 
 import static org.omg.ocl.analysis.syntax.antlr.OCLLexer.*;
 
@@ -27,18 +27,18 @@ public enum CollectionKind {
         if (kind == null) {
             throw new IllegalArgumentException(String.format("Incorrect collection kind '%s'", kind));
         }
-        if (kind.getKind() == COLLECTION) {
+        if (kind.getType() == COLLECTION) {
             return Collection;
-        } else if (kind.getKind() == SET) {
+        } else if (kind.getType() == SET) {
             return Set;
-        } else if (kind.getKind() == ORDERED_SET) {
+        } else if (kind.getType() == ORDERED_SET) {
             return OrderedSet;
-        } else if (kind.getKind() == BAG) {
+        } else if (kind.getType() == BAG) {
             return Bag;
-        } else if (kind.getKind() == SEQUENCE) {
+        } else if (kind.getType() == SEQUENCE) {
             return Sequence;
         } else {
-            throw new IllegalArgumentException(String.format("Incorrect collection kind '%s'", kind.getLexeme()));
+            throw new IllegalArgumentException(String.format("Incorrect collection kind '%s'", kind.getText()));
         }
     }
 }

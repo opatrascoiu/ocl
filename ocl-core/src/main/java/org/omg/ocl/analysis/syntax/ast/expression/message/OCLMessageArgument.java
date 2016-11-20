@@ -11,22 +11,16 @@
  specific language governing permissions and limitations
  under the License.
 */
-package org.omg.ocl.analysis.syntax.lexer;
+package org.omg.ocl.analysis.syntax.ast.expression.message;
 
-import org.omg.ocl.analysis.syntax.Positionable;
+import org.omg.ocl.analysis.syntax.Position;
+import org.omg.ocl.analysis.syntax.PositionableElement;
 
 /**
- * Created by Octavian Patrascoiu on 23-Oct-16.
+ * Created by Octavian Patrascoiu on 20-Nov-16.
  */
-public interface Token extends Positionable {
-    int getKind();
-    String getLexeme();
-
-    int getBeginLine();
-    int getBeginColumn();
-    int getBeginOffset();
-
-    int getEndLine();
-    int getEndColumn();
-    int getEndOffset();
+public abstract class OCLMessageArgument extends PositionableElement {
+    public OCLMessageArgument(Position position) {
+        super(position);
+    }
 }

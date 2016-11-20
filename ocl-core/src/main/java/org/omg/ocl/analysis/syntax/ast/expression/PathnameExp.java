@@ -38,4 +38,9 @@ public class PathnameExp extends OCLExpression {
     public Object accept(Visitor visitor, Map<String, Object> params) {
         return visitor.visit(this, params);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s(%s)", this.getClass().getSimpleName(), pathname);
+    }
 }

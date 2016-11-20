@@ -32,8 +32,4 @@ public class UnaryMinusExp extends ArithmeticExp {
         return visitor.visit(this, params);
     }
 
-    @Override
-    public String getOperator() {
-        return "-";
-    }
 }

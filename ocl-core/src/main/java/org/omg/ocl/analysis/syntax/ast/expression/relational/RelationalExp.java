@@ -36,4 +36,9 @@ public abstract class RelationalExp extends OCLExpression {
     public OCLExpression getRightOperand() {
         return rightOperand;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s(%s, %s)", getClass().getSimpleName(), leftOperand, rightOperand);
+    }
 }

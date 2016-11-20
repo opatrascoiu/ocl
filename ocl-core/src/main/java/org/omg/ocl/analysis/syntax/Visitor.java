@@ -19,10 +19,13 @@ import org.omg.ocl.analysis.syntax.ast.constraint.Invariant;
 import org.omg.ocl.analysis.syntax.ast.declaration.PositionableType;
 import org.omg.ocl.analysis.syntax.ast.declaration.VariableDeclaration;
 import org.omg.ocl.analysis.syntax.ast.expression.IfExp;
+import org.omg.ocl.analysis.syntax.ast.expression.OCLLetExpression;
 import org.omg.ocl.analysis.syntax.ast.expression.PathnameExp;
 import org.omg.ocl.analysis.syntax.ast.expression.arithmetic.*;
 import org.omg.ocl.analysis.syntax.ast.expression.literal.*;
 import org.omg.ocl.analysis.syntax.ast.expression.logical.*;
+import org.omg.ocl.analysis.syntax.ast.expression.message.OCLMessageArgument;
+import org.omg.ocl.analysis.syntax.ast.expression.message.OCLMessageExp;
 import org.omg.ocl.analysis.syntax.ast.expression.model.*;
 import org.omg.ocl.analysis.syntax.ast.expression.relational.*;
 
@@ -84,6 +87,11 @@ public interface Visitor {
     Object visit(CollectionIteratorExp element, Map<String, Object> params);
 
     //
+    // Let expression
+    //
+    Object visit(OCLLetExpression element, Map<String, Object> params);
+
+    //
     // Literal expressions
     //
     Object visit(IntegerLiteralExp element, Map<String, Object> params);
@@ -98,7 +106,12 @@ public interface Visitor {
     Object visit(InvalidLiteralExp element, Map<String, Object> params);
     Object visit(UnlimitedNaturalLiteralExp element, Map<String, Object> params);
 
+    Object visit(VariableDeclaration element, Map<String, Object> params);
     Object visit(PositionableType element, Map<String, Object> params);
 
-    Object visit(VariableDeclaration variableDeclaration, Map<String, Object> params);
+    //
+    // Messages
+    //
+    Object visit(OCLMessageExp element, Map<String, Object> params);
+    Object visit(OCLMessageArgument element, Map<String, Object> params);
 }

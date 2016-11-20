@@ -37,10 +37,8 @@ public abstract class ArithmeticExp extends OCLExpression {
         return rightOperand;
     }
 
-    public abstract String getOperator();
-
     @Override
     public String toString() {
-        return String.format("%s(%s, %s)", getOperator(), getLeftOperand(), getRightOperand());
+        return String.format("%s(%s, %s)", this.getClass().getSimpleName(), getLeftOperand(), getRightOperand());
     }
 }

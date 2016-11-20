@@ -13,6 +13,7 @@
 */
 package org.omg.ocl.analysis.syntax.ast.expression.logical;
 
+import org.omg.ocl.analysis.semantics.type.StringType;
 import org.omg.ocl.analysis.syntax.Position;
 import org.omg.ocl.analysis.syntax.ast.expression.OCLExpression;
 
@@ -35,5 +36,10 @@ public abstract class LogicalExp extends OCLExpression {
 
     public OCLExpression getRightOperand() {
         return rightOperand;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s(%s, %s)", getClass().getSimpleName(), leftOperand, rightOperand);
     }
 }

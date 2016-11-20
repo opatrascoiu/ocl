@@ -11,20 +11,28 @@
  specific language governing permissions and limitations
  under the License.
 */
-package org.omg.ocl.analysis.syntax.ast.expression.arithmetic;
+package org.omg.ocl.analysis.syntax.ast.expression.message;
 
 import org.omg.ocl.analysis.syntax.Position;
 import org.omg.ocl.analysis.syntax.Visitor;
 import org.omg.ocl.analysis.syntax.ast.expression.OCLExpression;
+import org.omg.ocl.analysis.syntax.ast.expression.message.OCLMessageArgument;
 
 import java.util.Map;
 
 /**
- * Created by Octavian Patrascoiu on 15-Oct-16.
+ * Created by Octavian Patrascoiu on 20-Nov-16.
  */
-public class MinusExp extends ArithmeticExp {
-    public MinusExp(Position position, OCLExpression leftOperand, OCLExpression rightOperand) {
-        super(position, leftOperand, rightOperand);
+public class OCLExpressionMessageArgument extends OCLMessageArgument {
+    private final OCLExpression expression;
+
+    public OCLExpressionMessageArgument(Position position, OCLExpression expression) {
+        super(position);
+        this.expression = expression;
+    }
+
+    public OCLExpression getExpression() {
+        return expression;
     }
 
     @Override
